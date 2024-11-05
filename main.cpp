@@ -64,15 +64,13 @@ unsigned int createShaderProgram(const char* vertexSource, const char* fragmentS
 }
 
 const float points[] {
-   0.5f,  0.5f, 0.0f,
-   0.5f, -0.5f, 0.0f,
   -0.5f, -0.5f, 0.0f,
-  -0.5f,  0.5f, 0.0f
-};
+   0.0f, -0.5f, 0.0f,
+   0.0f,  0.5f, 0.0f,
 
-const unsigned int indices[] {
-  0, 1, 3,
-  1, 2, 3
+   0.0f,  0.5f, 0.0f,
+   0.5f, -0.5f, 0.0f,
+   0.0f, -0.5f, 0.0f,
 };
 
 int main(const int argc, const char* argv[]) {
@@ -93,36 +91,43 @@ int main(const int argc, const char* argv[]) {
 
   const unsigned int shaderProgram = createShaderProgram(vertexShaderSource, fragmentShaderSource);
   
-  unsigned int VBO = 0, VAO = 0, EBO = 0;
-  glGenVertexArrays(1, &VAO);
-  glBindVertexArray(VAO);
-  glGenBuffers(1, &VBO);
-  glBindBuffer(GL_ARRAY_BUFFER, VBO);
-  glBufferData(GL_ARRAY_BUFFER, sizeof points, points, GL_STATIC_DRAW);
-  glGenBuffers(1, &EBO);
-  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-  glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof indices, indices, GL_STATIC_DRAW);
+  unsigned int VBOs[]{ 0, 0 }, VAOs[]{ 0, 0 };
+  glGenVertexArrays(2, VAOs);
+  glGenBuffers(2, VBOs);
+
+  glBindVertexArray(VAOs[0]);
+  glBindBuffer(GL_ARRAY_BUFFER, VBOs[0]);
+  glBufferData(GL_ARRAY_BUFFER, sizeof(points) / 2, points, GL_STATIC_DRAW);
   glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), nullptr);
   glEnableVertexAttribArray(0);
-  glBindVertexArray(0);
-  glBindBuffer(GL_ARRAY_BUFFER, 0);
-  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+  
+  glBindVertexArray(VAOs[1]);
+  glBindBuffer(GL_ARRAY_BUFFER, VBOs[1]);
+  glBufferData(GL_ARRAY_BUFFER, sizeof(points) / 2, points + 9, GL_STATIC_DRAW);
+  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), nullptr);
+  glEnableVertexAttribArray(0);
 
-  glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+  glBindBuffer(GL_ARRAY_BUFFER, 0);
+  glBindVertexArray(0);
+  
   while (!glfwWindowShouldClose(window)) {
     glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
 
     glUseProgram(shaderProgram);
-    glBindVertexArray(VAO);
-    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+
+    glBindVertexArray(VAOs[0]);
+    glDrawArrays(GL_TRIANGLES, 0, 3);
+
+    glBindVertexArray(VAOs[1]);
+    glDrawArrays(GL_TRIANGLES, 0, 3);
 
     glfwSwapBuffers(window);
     glfwPollEvents();
   }
   glDeleteProgram(shaderProgram);
-  glDeleteBuffers(1, &VBO);
-  glDeleteVertexArrays(1, &VAO);
+  glDeleteBuffers(2, VBOs);
+  glDeleteVertexArrays(2, VAOs);
   glfwTerminate();
   return 0;
 }
