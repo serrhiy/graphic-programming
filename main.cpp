@@ -23,10 +23,16 @@ const char* vertexShaderSource = "#version 330 core\n"
 "  gl_Position = vec4(position, 1);"
 "}";
 
-const char* fragmentShaderSource = "#version 330 core\n"
+const char* fragmentShaderOrange = "#version 330 core\n"
 "out vec4 color;"
 "void main() {"
 "  color = vec4(1.0f, 0.5f, 0.2f, 1.0f);"
+"}";
+
+const char* fragmentShaderYellow = "#version 330 core\n"
+"out vec4 color;"
+"void main() {"
+"  color = vec4(1.0f, 1.0f, 0.0f, 1.0f);"
 "}";
 
 unsigned int createShaderProgram(const char* vertexSource, const char* fragmentSource) {
@@ -89,7 +95,8 @@ int main(const int argc, const char* argv[]) {
     return 1;
   }
 
-  const unsigned int shaderProgram = createShaderProgram(vertexShaderSource, fragmentShaderSource);
+  const unsigned int shaderProgramOrange = createShaderProgram(vertexShaderSource, fragmentShaderOrange);
+  const unsigned int shaderProgramYellow = createShaderProgram(vertexShaderSource, fragmentShaderYellow);
   
   unsigned int VBOs[]{ 0, 0 }, VAOs[]{ 0, 0 };
   glGenVertexArrays(2, VAOs);
@@ -114,18 +121,19 @@ int main(const int argc, const char* argv[]) {
     glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
 
-    glUseProgram(shaderProgram);
-
+    glUseProgram(shaderProgramOrange);
     glBindVertexArray(VAOs[0]);
     glDrawArrays(GL_TRIANGLES, 0, 3);
 
+    glUseProgram(shaderProgramYellow);
     glBindVertexArray(VAOs[1]);
     glDrawArrays(GL_TRIANGLES, 0, 3);
 
     glfwSwapBuffers(window);
     glfwPollEvents();
   }
-  glDeleteProgram(shaderProgram);
+  glDeleteProgram(shaderProgramOrange);
+  glDeleteProgram(shaderProgramYellow);
   glDeleteBuffers(2, VBOs);
   glDeleteVertexArrays(2, VAOs);
   glfwTerminate();
