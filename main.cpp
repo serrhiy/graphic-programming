@@ -1,6 +1,7 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <stdexcept>
+#include <cmath>
 #include "hints.h"
 
 constexpr int width = 800;
@@ -19,18 +20,15 @@ void sizeChanging(GLFWwindow* window, int width, int height) {
 
 const char* vertexShaderSource = "#version 330 core\n"
 "layout (location = 0) in vec3 position;"
-"layout (location = 1) in vec3 color;"
-"out vec4 vertexColor;"
 "void main() {"
 "  gl_Position = vec4(position, 1);"
-"  vertexColor = vec4(color, 1);"
 "}";
 
 const char* fragmentShaderSource = "#version 330 core\n"
 "out vec4 color;"
-"in vec4 vertexColor;"
+"uniform vec3 vertexColor;"
 "void main() {"
-"  color = vertexColor;"
+"  color = vec4(vertexColor, 1);"
 "}";
 
 unsigned int createShaderProgram(const char* vertexSource, const char* fragmentSource) {
@@ -68,9 +66,9 @@ unsigned int createShaderProgram(const char* vertexSource, const char* fragmentS
 }
 
 const float points[] {
-  -0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 0.0f,
-   0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f,
-   0.0f,  0.5f, 0.0f, 0.0f, 0.0f, 1.0f,
+  -0.5f, -0.5f, 0.0f,
+   0.5f, -0.5f, 0.0f,
+   0.0f,  0.5f, 0.0f,
 };
 
 int main(const int argc, const char* argv[]) {
@@ -98,20 +96,22 @@ int main(const int argc, const char* argv[]) {
   glBindVertexArray(VAO);
   glBindBuffer(GL_ARRAY_BUFFER, VBO);
   glBufferData(GL_ARRAY_BUFFER, sizeof points, points, GL_STATIC_DRAW);
-  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), nullptr);
+  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), nullptr);
   glEnableVertexAttribArray(0);
-
-  glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(sizeof(float) * 3));
-  glEnableVertexAttribArray(1);
 
   glBindBuffer(GL_ARRAY_BUFFER, 0);
   glBindVertexArray(0);
-  
+
+  glUseProgram(shaderProgram);
+  const unsigned int vertexColor = glGetUniformLocation(shaderProgram, "vertexColor");
   while (!glfwWindowShouldClose(window)) {
     glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
 
-    glUseProgram(shaderProgram);
+    const auto time = glfwGetTime();
+    const auto green = sin(time) / 2 + 0.5;
+    glUniform3f(vertexColor, 0.f, green, 0.0);
+
     glBindVertexArray(VAO);
     glDrawArrays(GL_TRIANGLES, 0, 3);
 
