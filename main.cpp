@@ -3,6 +3,8 @@
 #include <stdexcept>
 #include <cmath>
 #include "hints.h"
+#include <Shader.h>
+#include <ShaderProgram.h>
 
 constexpr int width = 800;
 constexpr int height = 600;
@@ -16,53 +18,6 @@ void keyPress(GLFWwindow* window, int key, int scan, int action, int mods) {
 
 void sizeChanging(GLFWwindow* window, int width, int height) {
   glViewport(0, 0, width, height);
-}
-
-const char* vertexShaderSource = "#version 330 core\n"
-"layout (location = 0) in vec3 position;"
-"void main() {"
-"  gl_Position = vec4(position, 1);"
-"}";
-
-const char* fragmentShaderSource = "#version 330 core\n"
-"out vec4 color;"
-"uniform vec3 vertexColor;"
-"void main() {"
-"  color = vec4(vertexColor, 1);"
-"}";
-
-unsigned int createShaderProgram(const char* vertexSource, const char* fragmentSource) {
-  int success = 0;
-  char infolog[512];
-  const unsigned int vertexShader = glCreateShader(GL_VERTEX_SHADER);
-  glShaderSource(vertexShader, 1, &vertexSource, nullptr);
-  glCompileShader(vertexShader);
-  glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &success);
-  if (!success) {
-    glGetShaderInfoLog(vertexShader, 512, NULL, infolog);
-    throw std::invalid_argument(infolog);
-  }
-  const unsigned int fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-  glShaderSource(fragmentShader, 1, &fragmentSource, NULL);
-  glCompileShader(fragmentShader);
-  glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &success);
-  if (!success) {
-    glDeleteShader(vertexShader);
-    glGetShaderInfoLog(fragmentShader, 512, NULL, infolog);
-    throw std::invalid_argument(infolog);
-  }
-  const unsigned int shaderProgram = glCreateProgram();
-  glAttachShader(shaderProgram, vertexShader);
-  glAttachShader(shaderProgram, fragmentShader);
-  glLinkProgram(shaderProgram);
-  glDeleteShader(vertexShader);
-  glDeleteShader(fragmentShader);
-  glGetProgramiv(shaderProgram, GL_LINK_STATUS, &success);
-  if (!success) {
-    glGetProgramInfoLog(shaderProgram, 512, NULL, infolog);
-    throw std::invalid_argument(infolog);
-  }
-  return shaderProgram;
 }
 
 const float points[] {
@@ -87,7 +42,9 @@ int main(const int argc, const char* argv[]) {
     return 1;
   }
 
-  const unsigned int shaderProgram = createShaderProgram(vertexShaderSource, fragmentShaderSource);
+  const auto vertexShader = Shader("./shaders/vertex.vert", Shader::vertex);
+  const auto fragmentShader = Shader("./shaders/fragment.frag", Shader::fragment);
+  auto shaderProgram{ ShaderProgram{ vertexShader, fragmentShader } };
   
   unsigned int VBO{ 0 }, VAO{ 0 };
   glGenVertexArrays(1, &VAO);
@@ -102,16 +59,15 @@ int main(const int argc, const char* argv[]) {
   glBindBuffer(GL_ARRAY_BUFFER, 0);
   glBindVertexArray(0);
 
-  glUseProgram(shaderProgram);
-  const unsigned int vertexColor = glGetUniformLocation(shaderProgram, "vertexColor");
+  shaderProgram.use();
+  shaderProgram.createUniform("vertexColor");
   while (!glfwWindowShouldClose(window)) {
     glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
 
     const auto time = glfwGetTime();
     const auto green = sin(time) / 2 + 0.5;
-    glUniform3f(vertexColor, 0.f, green, 0.0);
-
+    shaderProgram.uniform3f("vertexColor", 0.f, green, 0.0);
     glBindVertexArray(VAO);
     glDrawArrays(GL_TRIANGLES, 0, 3);
 
