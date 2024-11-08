@@ -2,10 +2,11 @@
 #include <GLFW/glfw3.h>
 #include <stdexcept>
 #include <cmath>
-#include "hints.h"
 #include <stb_image.h>
-#include <Shader.h>
-#include <ShaderProgram.h>
+#include "hints.hpp"
+#include "Shader.hpp"
+#include "ShaderProgram.hpp"
+#include "math/math.hpp"
 
 constexpr int width = 800;
 constexpr int height = 600;
@@ -24,9 +25,9 @@ void sizeChanging(GLFWwindow* window, int width, int height) {
 }
 
 const float points[] {
-  -0.5f, -0.5f, 0.0f,  1.f, 0.f, 0.f,  0.0f, 0.0f,
-   0.5f, -0.5f, 0.0f,  0.f, 1.f, 0.f,  1.0f, 0.0f,
-   0.0f,  0.5f, 0.0f,  0.f, 0.f, 1.f,  0.5f, 1.0f,
+  -0.5f, -0.5f, 0.0f,  0.0f, 0.0f,
+   0.5f, -0.5f, 0.0f,  1.0f, 0.0f,
+   0.0f,  0.5f, 0.0f,  0.5f, 1.0f,
 };
 
 unsigned int loadTexture(const char* path, bool useAlpha) {
@@ -77,14 +78,11 @@ int main(const int argc, const char* argv[]) {
   glBindVertexArray(VAO);
   glBindBuffer(GL_ARRAY_BUFFER, VBO);
   glBufferData(GL_ARRAY_BUFFER, sizeof points, points, GL_STATIC_DRAW);
-  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), nullptr);
+  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), nullptr);
   glEnableVertexAttribArray(0);
 
-  glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
+  glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
   glEnableVertexAttribArray(1);
-
-  glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
-  glEnableVertexAttribArray(2);
 
   glBindBuffer(GL_ARRAY_BUFFER, 0);
   glBindVertexArray(0);
@@ -92,6 +90,7 @@ int main(const int argc, const char* argv[]) {
   shaderProgram.use();
   shaderProgram.createUniform("obj1Texture");
   shaderProgram.createUniform("obj2Texture");
+  shaderProgram.createUniform("transform");
   shaderProgram.uniform("obj1Texture", 0);
   shaderProgram.uniform("obj2Texture", 1);
   glActiveTexture(GL_TEXTURE0);
@@ -102,6 +101,11 @@ int main(const int argc, const char* argv[]) {
     glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
 
+    const auto time = glfwGetTime();
+    const auto rotate{ math::rotate(time, { 0, 0, 1.0 }) };
+    const auto translate{ math::translate({ 0.5f, -0.5f, 0 }) };
+    const auto transform = translate * rotate;
+    shaderProgram.uniform("transform", 1, true, transform.pointer());
     glBindVertexArray(VAO);
     glDrawArrays(GL_TRIANGLES, 0, 3);
 

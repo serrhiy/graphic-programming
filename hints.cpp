@@ -1,4 +1,4 @@
-#include "hints.h"
+#include "hints.hpp"
 #include <GLFW/glfw3.h>
 #include <map>
 

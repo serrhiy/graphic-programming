@@ -5,7 +5,7 @@
 #include <variant>
 #include <filesystem>
 #include <stdexcept>
-#include "Shader.h"
+#include "Shader.hpp"
 
 constexpr auto bufsize = 512;
 
