@@ -40,7 +40,16 @@ void ShaderProgram::createUniform(const char* name) {
   uniforms.insert({ std::string{ name }, location });
 }
 
-void ShaderProgram::uniform3f(const std::string& name, float x, float y, float z) {
+void ShaderProgram::uniform(const std::string& name, int x) {
+  const auto location = uniforms.find(name);
+  if (location == uniforms.end()) {
+    const auto error = std::string{ "Cannot find" } + name + "uniform";
+    throw std::invalid_argument(error);
+  } 
+  glUniform1i(location->second, x);
+}
+
+void ShaderProgram::uniform(const std::string& name, float x, float y, float z) {
   const auto location = uniforms.find(name);
   if (location == uniforms.end()) {
     const auto error = std::string{ "Cannot find" } + name + "uniform";

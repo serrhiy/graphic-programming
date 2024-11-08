@@ -10,7 +10,8 @@
 constexpr int width = 800;
 constexpr int height = 600;
 const char* title = "Graphic Programming";
-const char* texturePath = "./textures/brick.jpg";
+const char* texture1Path = "./textures/brick.jpg";
+const char* texture2Path = "./textures/awesomeface.png";
 
 void keyPress(GLFWwindow* window, int key, int scan, int action, int mods) {
   if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) {
@@ -28,7 +29,7 @@ const float points[] {
    0.0f,  0.5f, 0.0f,  0.f, 0.f, 1.f,  0.5f, 1.0f,
 };
 
-unsigned int loadTexture(const char* path) {
+unsigned int loadTexture(const char* path, bool useAlpha) {
   unsigned int texture{ };
   glGenTextures(1, &texture);
   glBindTexture(GL_TEXTURE_2D, texture);
@@ -37,9 +38,11 @@ unsigned int loadTexture(const char* path) {
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
   int width, height, channel;
-  unsigned char* image = stbi_load(texturePath, &width, &height, &channel, 0);
+  stbi_set_flip_vertically_on_load(true);
+  unsigned char* image = stbi_load(path, &width, &height, &channel, 0);
   if (!image) throw std::runtime_error("Caannot load texture");
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, image);
+  const int rgb = useAlpha ? GL_RGBA : GL_RGB;
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, rgb, GL_UNSIGNED_BYTE, image);
   stbi_image_free(image);
   return texture;
 }
@@ -64,7 +67,8 @@ int main(const int argc, const char* argv[]) {
   const auto fragmentShader{ Shader{ "./shaders/fragment.frag", Shader::fragment } };
   auto shaderProgram{ ShaderProgram{ vertexShader, fragmentShader } };
 
-  unsigned int texture = loadTexture(texturePath);
+  const unsigned int texture1 = loadTexture(texture1Path, false);
+  const unsigned int texture2 = loadTexture(texture2Path, true);
   
   unsigned int VBO{ 0 }, VAO{ 0 };
   glGenVertexArrays(1, &VAO);
@@ -86,11 +90,18 @@ int main(const int argc, const char* argv[]) {
   glBindVertexArray(0);
 
   shaderProgram.use();
+  shaderProgram.createUniform("obj1Texture");
+  shaderProgram.createUniform("obj2Texture");
+  shaderProgram.uniform("obj1Texture", 0);
+  shaderProgram.uniform("obj2Texture", 1);
+  glActiveTexture(GL_TEXTURE0);
+  glBindTexture(GL_TEXTURE_2D, texture1);
+  glActiveTexture(GL_TEXTURE1);
+  glBindTexture(GL_TEXTURE_2D, texture2);
   while (!glfwWindowShouldClose(window)) {
     glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
 
-    glBindTexture(GL_TEXTURE_2D, texture);
     glBindVertexArray(VAO);
     glDrawArrays(GL_TRIANGLES, 0, 3);
 
@@ -99,7 +110,8 @@ int main(const int argc, const char* argv[]) {
   }
   glDeleteBuffers(1, &VBO);
   glDeleteVertexArrays(1, &VAO);
-  glDeleteTextures(1, &texture);
+  glDeleteTextures(1, &texture1);
+  glDeleteTextures(1, &texture2);
   glfwTerminate();
   return 0;
 }

@@ -3,7 +3,6 @@
 #include "Shader.h"
 #include <string>
 #include <map>
-#include <variant>
 
 class ShaderProgram {
   private:
@@ -14,5 +13,6 @@ class ShaderProgram {
     ~ShaderProgram();
     void use() const;
     void createUniform(const char* name);
-    void uniform3f(const std::string& name, float x, float y, float z);
+    void uniform(const std::string& name, float x, float y, float z);
+    void uniform(const std::string& name, int x);
 };
