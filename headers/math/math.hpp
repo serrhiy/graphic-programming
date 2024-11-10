@@ -6,5 +6,6 @@ namespace math {
   Matrix4x4 translate(const Vector3& vector);
   Matrix4x4 rotate(const float angle, const Vector3& vector);
   Matrix4x4 scale(const Vector3& vector);
+  Matrix4x4 perspective(float fov, float aspectRatio, float near, float far);
   float radians(float angles);
 }

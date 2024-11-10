@@ -3,6 +3,7 @@
 #include <stdexcept>
 #include <cmath>
 #include <stb_image.h>
+#include <array>
 #include "hints.hpp"
 #include "Shader.hpp"
 #include "ShaderProgram.hpp"
@@ -24,10 +25,61 @@ void sizeChanging(GLFWwindow* window, int width, int height) {
   glViewport(0, 0, width, height);
 }
 
-const float points[] {
-  -0.5f, -0.5f, 0.0f,  0.0f, 0.0f,
-   0.5f, -0.5f, 0.0f,  1.0f, 0.0f,
-   0.0f,  0.5f, 0.0f,  0.5f, 1.0f,
+float points[] {
+    -0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
+     0.5f, -0.5f, -0.5f,  1.0f, 0.0f,
+     0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+     0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+    -0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
+    -0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
+ 
+    -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+     0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
+     0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
+     0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
+    -0.5f,  0.5f,  0.5f,  0.0f, 1.0f,
+    -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+ 
+    -0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+    -0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+    -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+    -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+    -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+    -0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+ 
+     0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+     0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+     0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+     0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+     0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+     0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+ 
+    -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+     0.5f, -0.5f, -0.5f,  1.0f, 1.0f,
+     0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
+     0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
+    -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+    -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+ 
+    -0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
+     0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+     0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+     0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+    -0.5f,  0.5f,  0.5f,  0.0f, 0.0f,
+    -0.5f,  0.5f, -0.5f,  0.0f, 1.0f
+};
+
+const std::array cubePositions {
+  math::Vector3( 0.0f,  0.0f,  0.0f), 
+  math::Vector3( 2.0f,  5.0f, -15.0f), 
+  math::Vector3(-1.5f, -2.2f, -2.5f),  
+  math::Vector3(-3.8f, -2.0f, -12.3f),  
+  math::Vector3( 2.4f, -0.4f, -3.5f),  
+  math::Vector3(-1.7f,  3.0f, -7.5f),  
+  math::Vector3( 1.3f, -2.0f, -2.5f),  
+  math::Vector3( 1.5f,  2.0f, -2.5f), 
+  math::Vector3( 1.5f,  0.2f, -1.5f), 
+  math::Vector3(-1.3f,  1.0f, -1.5f)  
 };
 
 unsigned int loadTexture(const char* path, bool useAlpha) {
@@ -97,17 +149,25 @@ int main(const int argc, const char* argv[]) {
   glBindTexture(GL_TEXTURE_2D, texture1);
   glActiveTexture(GL_TEXTURE1);
   glBindTexture(GL_TEXTURE_2D, texture2);
+  glEnable(GL_DEPTH_TEST);
   while (!glfwWindowShouldClose(window)) {
     glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    const auto time = glfwGetTime();
-    const auto rotate{ math::rotate(time, { 0, 0, 1.0 }) };
-    const auto translate{ math::translate({ 0.5f, -0.5f, 0 }) };
-    const auto transform = translate * rotate;
-    shaderProgram.uniform("transform", 1, true, transform.pointer());
+    const auto view{ math::translate({ 0.0f, 0.0f, -3.f }) };
+    const auto projection{ math::perspective(math::radians(45), (float)width / height, 0.1f, 100.f) };
+    const auto time{ glfwGetTime() };
+    auto index = 0;
     glBindVertexArray(VAO);
-    glDrawArrays(GL_TRIANGLES, 0, 3);
+    for (const auto cubePosition: cubePositions) {
+      const auto rotateVector{ math::Vector3{ 0.5f, 1.f, 0.f }.normal() };
+      const auto rotate{ math::rotate(glfwGetTime() * (++index) / 2, rotateVector) };
+      const auto translate{ math::translate(cubePosition) };
+      const auto model{ translate * rotate };
+      const auto transform{ projection * view * model };
+      shaderProgram.uniform("transform", 1, true, transform.pointer());
+      glDrawArrays(GL_TRIANGLES, 0, 36);
+    }
 
     glfwSwapBuffers(window);
     glfwPollEvents();

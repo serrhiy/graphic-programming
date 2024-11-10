@@ -48,6 +48,17 @@ math::Matrix4x4 math::scale(const Vector3& vector) {
   return Matrix4x4{ matrix };
 }
 
+math::Matrix4x4 math::perspective(float angle, float ratio, float near, float far) {
+  float* matrix{ new float[SIZE * SIZE]{  } };
+  const float theta{ tanf(angle / 2) };
+  matrix[0] = 1 / (ratio * theta);
+  matrix[5] = 1 / (theta);
+  matrix[10] = -(far + near) / (far - near);
+  matrix[11] = -(2 * far * near) / (far - near);
+  matrix[14] = -1;
+  return Matrix4x4{ matrix };
+}
+
 float math::radians(float angles) {
   return angles * M_PI / 180.0f;
 }

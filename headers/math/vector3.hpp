@@ -5,5 +5,7 @@ namespace math {
     float x;
     float y;
     float z;
+    Vector3& normal();
+    float length() const;
   };
 }
