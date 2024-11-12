@@ -150,13 +150,17 @@ int main(const int argc, const char* argv[]) {
   glActiveTexture(GL_TEXTURE1);
   glBindTexture(GL_TEXTURE_2D, texture2);
   glEnable(GL_DEPTH_TEST);
+  constexpr auto radius = 10;
   while (!glfwWindowShouldClose(window)) {
     glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-    const auto view{ math::translate({ 0.0f, 0.0f, -3.f }) };
-    const auto projection{ math::perspective(math::radians(45), (float)width / height, 0.1f, 100.f) };
     const auto time{ glfwGetTime() };
+    const auto view = math::lookAt(
+      { sinf(time) * 10, 0.0f, cosf(time) * 10 },
+      { 0.0f, 0.0f, 0.0f },
+      { 0.0f, 1.0f, 0.0f }
+    );
+    const auto projection{ math::perspective(math::radians(45), (float)width / height, 0.1f, 100.f) };
     auto index = 0;
     glBindVertexArray(VAO);
     for (const auto cubePosition: cubePositions) {

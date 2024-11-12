@@ -64,9 +64,38 @@ float math::radians(float angles) {
   return angles * M_PI / 180.0f;
 }
 
-math::Vector3 math::ortho(const Vector3& first, const Vector3& second) {
+math::Vector3 math::cross(const Vector3& first, const Vector3& second) {
   const auto x = first.y * second.z - first.z * second.y;
   const auto y = first.z * second.x - first.x * second.z;
   const auto z = first.x * second.y - first.y * second.x;
   return Vector3{ x, y, z };
+}
+
+float math::dot(const Vector3& first, const Vector3& second) {
+  return first.x * second.x + first.y * second.y + first.z * second.z;
+}
+
+math::Matrix4x4 math::lookAt(
+  const Vector3& position,
+  const Vector3& target,
+  const Vector3& up
+) {
+  const auto direction = (position - target).normal();
+  const auto right = math::cross(up, direction).normal();
+  const auto newUp = math::cross(direction, right);
+  auto matrix = new float[SIZE * SIZE]{  };
+  matrix[0] = right.x;
+  matrix[1] = right.y;
+  matrix[2] = right.z;
+  matrix[3] = -math::dot(right, position);
+  matrix[4] = newUp.x;
+  matrix[5] = newUp.y;
+  matrix[6] = newUp.z;
+  matrix[7] = -dot(newUp, position);
+  matrix[8] = direction.x;
+  matrix[9] = direction.y;
+  matrix[10] = direction.z;
+  matrix[11] = -dot(direction, position);
+  matrix[15] = 1;
+  return Matrix4x4{ matrix };
 }
