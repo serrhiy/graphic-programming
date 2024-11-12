@@ -1,6 +1,7 @@
 #define _USE_MATH_DEFINES
 #include <cmath>
 #include "math/math.hpp"
+#include "math/vector3.hpp"
 
 constexpr auto SIZE{ 4 };
 
@@ -61,4 +62,11 @@ math::Matrix4x4 math::perspective(float angle, float ratio, float near, float fa
 
 float math::radians(float angles) {
   return angles * M_PI / 180.0f;
+}
+
+math::Vector3 math::ortho(const Vector3& first, const Vector3& second) {
+  const auto x = first.y * second.z - first.z * second.y;
+  const auto y = first.z * second.x - first.x * second.z;
+  const auto z = first.x * second.y - first.y * second.x;
+  return Vector3{ x, y, z };
 }

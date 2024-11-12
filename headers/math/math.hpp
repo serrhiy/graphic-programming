@@ -8,4 +8,5 @@ namespace math {
   Matrix4x4 scale(const Vector3& vector);
   Matrix4x4 perspective(float fov, float aspectRatio, float near, float far);
   float radians(float angles);
+  Vector3 ortho(const Vector3& first, const Vector3& second);
 }
