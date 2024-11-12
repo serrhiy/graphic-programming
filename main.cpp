@@ -82,6 +82,24 @@ const std::array cubePositions {
   math::Vector3(-1.3f,  1.0f, -1.5f)  
 };
 
+math::Vector3 cameraPos = { 0.0f, 0.0f,  3.0f };
+constexpr math::Vector3 cameraFront{ 0.0f, 0.0f, -1.0f };
+constexpr math::Vector3 cameraUp{ 0.0f, 1.0f, 0.0f };
+constexpr math::Vector3 cameraRight{ 1.0f, 0.0f, 0.0f };
+constexpr auto cameraSpeed = 0.05f;
+
+void processInput(GLFWwindow *window) {
+  if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
+    cameraPos += cameraSpeed * cameraFront;
+  } else if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
+    cameraPos -= cameraSpeed * cameraFront;
+  } else if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
+    cameraPos += cameraSpeed * cameraRight;
+  } else if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
+    cameraPos -= cameraSpeed * cameraRight;
+  }
+}
+
 unsigned int loadTexture(const char* path, bool useAlpha) {
   unsigned int texture{ };
   glGenTextures(1, &texture);
@@ -154,12 +172,9 @@ int main(const int argc, const char* argv[]) {
   while (!glfwWindowShouldClose(window)) {
     glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    processInput(window);
     const auto time{ glfwGetTime() };
-    const auto view = math::lookAt(
-      { sinf(time) * 10, 0.0f, cosf(time) * 10 },
-      { 0.0f, 0.0f, 0.0f },
-      { 0.0f, 1.0f, 0.0f }
-    );
+    const auto view = math::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
     const auto projection{ math::perspective(math::radians(45), (float)width / height, 0.1f, 100.f) };
     auto index = 0;
     glBindVertexArray(VAO);
