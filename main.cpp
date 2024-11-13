@@ -8,6 +8,7 @@
 #include "Shader.hpp"
 #include "ShaderProgram.hpp"
 #include "math/math.hpp"
+#include <Camera.h>
 
 constexpr int width = 800;
 constexpr int height = 600;
@@ -82,56 +83,6 @@ const std::array cubePositions {
   math::Vector3(-1.3f,  1.0f, -1.5f)
 };
 
-auto firstMouse = true;
-auto yaw = -90.0f;
-float pitch = 0.0f;
-float lastX = width / 2.0;
-float lastY = height / 2.0;
-
-math::Vector3 cameraPos = { 0.0f, 0.0f,  3.0f };
-math::Vector3 cameraFront{ 0.0f, 0.0f, -1.0f };
-constexpr math::Vector3 cameraUp{ 0.0f, 1.0f, 0.0f };
-auto deltaTime = 0.f;
-auto lastFrame = 0.f;
-
-void processInput(GLFWwindow *window) {
-  auto cameraSpeed = 2.5f * deltaTime;
-  const auto cameraRight = math::cross(cameraFront, cameraUp).normal();
-  if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
-    cameraPos += cameraSpeed * cameraFront;
-  }if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
-    cameraPos -= cameraSpeed * cameraFront;
-  } if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
-    cameraPos += cameraSpeed * cameraRight;
-  } if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
-    cameraPos -= cameraSpeed * cameraRight;
-  }
-}
-#include <iostream>
-void mouse_callback(GLFWwindow * window, double xpos, double ypos) {
-  constexpr float sensitivity = 0.1f;
-  const auto xoffset = (xpos - lastX) * sensitivity;
-  const auto yoffset = (lastY - ypos) * sensitivity;
-
-  lastX = xpos;
-  lastY = ypos;
-
-  yaw += xoffset;
-  pitch += yoffset;
-
-  if (pitch > 89.0f)
-    pitch = 89.0f;
-  if (pitch < -89.0f)
-    pitch = -89.0f;
-
-  math::Vector3 front {
-    cosf(math::radians(yaw)) * cosf(math::radians(pitch)),
-    sinf(math::radians(pitch)),
-    sinf(math::radians(yaw)) * cosf(math::radians(pitch))
-  };
-  cameraFront = front.normal();
-}
-
 unsigned int loadTexture(const char* path, bool useAlpha) {
   unsigned int texture{ };
   glGenTextures(1, &texture);
@@ -159,7 +110,6 @@ int main(const int argc, const char* argv[]) {
     return 1;
   }
   glfwMakeContextCurrent(window);
-  glfwSetCursorPosCallback(window, mouse_callback);
   glfwSetFramebufferSizeCallback(window, sizeChanging);
   glfwSetKeyCallback(window, keyPress);
   glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
@@ -202,15 +152,13 @@ int main(const int argc, const char* argv[]) {
   glActiveTexture(GL_TEXTURE1);
   glBindTexture(GL_TEXTURE_2D, texture2);
   glEnable(GL_DEPTH_TEST);
-  constexpr auto radius = 10;
+  Camera camera{ window, { 0, 0, 3 } };
   while (!glfwWindowShouldClose(window)) {
-    const auto time = glfwGetTime();
-    deltaTime = time - lastFrame;
-    lastFrame = time;
+    camera.refresh();
     glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    processInput(window);
-    const auto view = math::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
+    const auto time = glfwGetTime();
+    const auto view = camera.view();
     const auto projection = math::perspective(math::radians(45), (float)width / height, 0.1f, 100.f);
     auto index = 0;
     glBindVertexArray(VAO);
