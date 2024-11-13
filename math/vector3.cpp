@@ -5,13 +5,14 @@ float math::Vector3::length() const {
   return sqrtf(x * x + y * y + z * z);
 }
 
-math::Vector3& math::Vector3::normal() {
+math::Vector3 &math::Vector3::normal()
+{
   const auto len = length();
   if (len == 0) return *this;
   x /= len;
   y /= len;
   z /= len;
-  return *this;  
+  return *this;
 }
 
 math::Vector3 math::operator+(const Vector3& v1, const Vector3& v2) {
